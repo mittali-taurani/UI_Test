@@ -79,7 +79,7 @@ const PaymentForm = () => {
             ? checkCardNumber(cardType, cardNumber)
               ? ""
               : ERRORS.CARD_NUMBER_INVALID
-            : ERRORS.CARD_TYPE_EMPTY;
+            : ERRORS.CARD_NUMBER_EMPTY;
         return errors;
       case "expiry":
         errors.expiry =
