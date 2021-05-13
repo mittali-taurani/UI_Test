@@ -17,13 +17,3 @@ export async function getCardTypes() {
     throw new Error("Error occured in fetch api call");
   }
 }
-
-/* const fetchCardTypes = async () => {
-  try {
-    const response = await axios.get(CARD_TYPES_URL);
-    setCardTypes(response.data.cardTypes);
-  } catch (error) {
-    console.log(error.message);
-    throw new Error("Error occured in fetch api call");
-  }
-}; */
