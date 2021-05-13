@@ -1,0 +1,236 @@
+import "./style.scss";
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { ROUTE, ERRORS } from "../../../helper/constants";
+// import { FaCaretSquareDown } from "react-icons/fa";
+import {
+  getCardTypes,
+  saveDataToLocalStorage,
+  getDataFromLocalStorage,
+} from "../../../helper/util";
+
+const PaymentForm = () => {
+  const [cardTypes, setCardTypes] = useState(
+    getDataFromLocalStorage(`cardTypes`)
+  );
+
+  const [state, setState] = useState({
+    cardType: "",
+    cardNumber: "",
+    expiry: "",
+    name: "",
+    email: "",
+  });
+  const [errors, setErrors] = useState({});
+  const submitBtnRef = React.createRef();
+
+  useEffect(() => {
+    if (!cardTypes) return;
+    saveDataToLocalStorage(`cardTypes`, cardTypes);
+  }, [cardTypes]);
+
+  useEffect(() => {
+    async function getCardTypesData() {
+      const data = await getCardTypes();
+      setCardTypes(data);
+    }
+    if (cardTypes) return;
+    getCardTypesData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if(!errors)
+      submitBtnRef.current.event.disabled = false;
+  },[errors, submitBtnRef]);
+
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setState({ ...state, [name]: value });
+    // console.log(state);
+  };
+
+  const checkCardNumber = (cardType, cardNumber) => {
+    if (cardType === "Amex") return /^[0-9]{15}$/g.test(cardNumber);
+    return /^[0-9]{16}$/g.test(cardNumber);
+  };
+
+  const checkExpiryDate = (date) => {
+    return /^(0[1-9]|1[0-2])\/([0-9]{2})$/g.test(date);
+  };
+
+  const checkUserName = (name) => {
+    return /^[a-zA-Z ]{1,50}$/g.test(name);
+  };
+
+  const checkUserEmail = (email) => {
+    return /^\w+@[a-zA-Z0-9_]+?\.[a-zA-Z]{2,3}$/g.test(email);
+  };
+
+  const validate = (eventName) => {
+    setErrors({});
+    const { cardType, cardNumber, expiry, name, email } = state;
+
+    switch (eventName){
+
+      case "cardType": 
+        errors.cardType = cardType === "" ? ERRORS.CARD_TYPE_EMPTY : "";
+        return errors;
+      default:
+        return errors;
+    }
+    
+
+    /* errors.cardType = cardType === "" ? ERRORS.CARD_TYPE_EMPTY : "";
+    errors.cardNumber =
+      cardNumber.length > 0
+        ? checkCardNumber(cardType, cardNumber)
+          ? ""
+          : ERRORS.CARD_NUMBER_INVALID
+        : ERRORS.CARD_TYPE_EMPTY;
+    errors.expiry =
+      expiry.length > 0
+        ? checkExpiryDate(expiry)
+          ? ""
+          : ERRORS.EXPIRY_INVALID
+        : ERRORS.EXPIRY_EMPTY;
+
+    errors.name =
+      name.length > 0
+        ? checkUserName(name)
+          ? ""
+          : ERRORS.NAME_INVALID
+        : ERRORS.NAME_EMPTY;
+
+    errors.email =
+      email.length > 0
+        ? checkUserEmail(email)
+          ? ""
+          : ERRORS.EMAIL_INVALID
+        : "";
+    console.log(errors);
+    return errors; */
+  };
+
+  const handleOnSubmit = (event) => {
+    event.preventDefault();
+    console.log(state);
+    // setErrors(validate());
+  };
+
+  const handleOnBlur = (event) => {
+    const { name } = event.target;
+    setErrors(validate(name));
+  }
+
+  return (
+    <div className="payment-form__main">
+      <form className="payment-form__content">
+        <div className="payment-form__element">
+          <label htmlFor="cardTypes">Card Types:</label>
+          <select
+            className="card-type__select"
+            name="cardType"
+            defaultValue={"DEFAULT"}
+            onChange={(event) => handleChange(event)}
+            onBlur={(event) => handleOnBlur(event)}
+            required
+          >
+            <option className="drop-down__option" value="DEFAULT" disabled>
+              - Select Card Type -
+            </option>
+            {cardTypes
+              ? cardTypes.map((element, key) => (
+                  <option
+                    {...{
+                      className: "drop-down__option",
+                      value: element.value,
+                      key,
+                    }}
+                  >
+                    {element.value}
+                  </option>
+                ))
+              : ""}
+          </select>
+        </div>
+        <div className="payment-form__element">
+          <label></label>
+          {errors.cardType && <p className="error__p">{errors.cardType}</p>}
+        </div>
+        <div className="payment-form__element">
+          <label htmlFor="cardNumber">Card Number</label>
+          <input
+            type="tel"
+            name="cardNumber"
+            onChange={(event) => handleChange(event)}
+            placeholder="Valid Card Number"
+            required
+          />
+        </div>
+        <div className="payment-form__element">
+          <label></label>
+          {errors.cardNumber && <p className="error__p">{errors.cardNumber}</p>}
+        </div>
+        <div className="payment-form__element">
+          <label htmlFor="expiry">Expiry</label>
+          <input
+            type="text"
+            name="expiry"
+            onChange={(event) => handleChange(event)}
+            placeholder="MM/YY"
+            required
+          />
+        </div>
+        <div className="payment-form__element">
+          <label></label>
+          {errors.expiry && <p className="error__p">{errors.expiry}</p>}
+        </div>
+        <div className="payment-form__element">
+          <label htmlFor="name">Name</label>
+          <input
+            type="text"
+            name="name"
+            onChange={(event) => handleChange(event)}
+            maxLength={50}
+            placeholder="Your Name"
+            required
+          />
+        </div>
+        <div className="payment-form__element">
+          <label></label>
+          {errors.name && <p className="error__p">{errors.name}</p>}
+        </div>
+        <div className="payment-form__element">
+          <label htmlFor="email">Email</label>
+          <input
+            type="email"
+            name="email"
+            onChange={(event) => handleChange(event)}
+            placeholder="Your Email"
+          />
+        </div>
+        <div className="payment-form__element">
+          <label></label>
+          {errors.email && <p className="error__p">{errors.email}</p>}
+        </div>
+        <div className="payment-form__element">
+          <label></label>
+          <Link to={ROUTE.PAYMENT_PROCESS} className="submit">
+            <button
+              type="button"
+              className="blackBg-whiteFg-btn"
+              onClick={handleOnSubmit}
+              ref={submitBtnRef}
+              disabled
+            >
+              Confirm Payment
+            </button>
+          </Link>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+export default PaymentForm;
