@@ -12,6 +12,7 @@ const PaymentProcess = () => {
   const [successResponseMessage, setSuccessResponseMessage] = useState("");
 
   const fetchCardTypes = async () => {
+    setFetchError("");
     try {
       const response = await fetch(PAYMENT_SUCCESS_URL);
       const data = await response.json();
@@ -24,10 +25,10 @@ const PaymentProcess = () => {
   };
 
   const fetchFailRequest = async () => {
+    setInvoiceNumber("");
     try {
       const response = await fetch(PAYMENT_FAILED_URL);
       const data = await response.json();
-      console.log(data);
       setFetchError(data.responseMessage);
     } catch (error) {
       console.log(error.message);

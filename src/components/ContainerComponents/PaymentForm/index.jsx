@@ -2,7 +2,6 @@ import "./style.scss";
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ROUTE, ERRORS } from "../../../helper/constants";
-// import { FaCaretSquareDown } from "react-icons/fa";
 import {
   getCardTypes,
   saveDataToLocalStorage,
@@ -22,6 +21,7 @@ const PaymentForm = () => {
     email: "",
   });
   const [errors, setErrors] = useState({});
+  const [allValidInputs, setAllValidInputs] = useState(false);
   const submitBtnRef = React.createRef();
 
   useEffect(() => {
@@ -40,14 +40,12 @@ const PaymentForm = () => {
   }, []);
 
   useEffect(() => {
-    if(!errors)
-      submitBtnRef.current.event.disabled = false;
-  },[errors, submitBtnRef]);
+    if (allValidInputs) submitBtnRef.current.disabled = false;
+  }, [allValidInputs, submitBtnRef]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
     setState({ ...state, [name]: value });
-    // console.log(state);
   };
 
   const checkCardNumber = (cardType, cardNumber) => {
@@ -71,57 +69,65 @@ const PaymentForm = () => {
     setErrors({});
     const { cardType, cardNumber, expiry, name, email } = state;
 
-    switch (eventName){
-
-      case "cardType": 
+    switch (eventName) {
+      case "cardType":
         errors.cardType = cardType === "" ? ERRORS.CARD_TYPE_EMPTY : "";
+        return errors;
+      case "cardNumber":
+        errors.cardNumber =
+          cardNumber.length > 0
+            ? checkCardNumber(cardType, cardNumber)
+              ? ""
+              : ERRORS.CARD_NUMBER_INVALID
+            : ERRORS.CARD_TYPE_EMPTY;
+        return errors;
+      case "expiry":
+        errors.expiry =
+          expiry.length > 0
+            ? checkExpiryDate(expiry)
+              ? ""
+              : ERRORS.EXPIRY_INVALID
+            : ERRORS.EXPIRY_EMPTY;
+        return errors;
+      case "name":
+        errors.name =
+          name.length > 0
+            ? checkUserName(name)
+              ? ""
+              : ERRORS.NAME_INVALID
+            : ERRORS.NAME_EMPTY;
+        return errors;
+      case "email":
+        errors.email =
+          email.length > 0
+            ? checkUserEmail(email)
+              ? ""
+              : ERRORS.EMAIL_INVALID
+            : "";
         return errors;
       default:
         return errors;
     }
-    
-
-    /* errors.cardType = cardType === "" ? ERRORS.CARD_TYPE_EMPTY : "";
-    errors.cardNumber =
-      cardNumber.length > 0
-        ? checkCardNumber(cardType, cardNumber)
-          ? ""
-          : ERRORS.CARD_NUMBER_INVALID
-        : ERRORS.CARD_TYPE_EMPTY;
-    errors.expiry =
-      expiry.length > 0
-        ? checkExpiryDate(expiry)
-          ? ""
-          : ERRORS.EXPIRY_INVALID
-        : ERRORS.EXPIRY_EMPTY;
-
-    errors.name =
-      name.length > 0
-        ? checkUserName(name)
-          ? ""
-          : ERRORS.NAME_INVALID
-        : ERRORS.NAME_EMPTY;
-
-    errors.email =
-      email.length > 0
-        ? checkUserEmail(email)
-          ? ""
-          : ERRORS.EMAIL_INVALID
-        : "";
-    console.log(errors);
-    return errors; */
-  };
-
-  const handleOnSubmit = (event) => {
-    event.preventDefault();
-    console.log(state);
-    // setErrors(validate());
   };
 
   const handleOnBlur = (event) => {
     const { name } = event.target;
     setErrors(validate(name));
-  }
+    console.log(errors);
+    if (
+      errors &&
+      !errors.cardType &&
+      !errors.cardNumber &&
+      !errors.expiry &&
+      !errors.name &&
+      !errors.email &&
+      !!state.cardType &&
+      !!state.cardNumber &&
+      !!state.expiry &&
+      !!state.name
+    )
+      setAllValidInputs(true);
+  };
 
   return (
     <div className="payment-form__main">
@@ -164,6 +170,7 @@ const PaymentForm = () => {
             type="tel"
             name="cardNumber"
             onChange={(event) => handleChange(event)}
+            onBlur={(event) => handleOnBlur(event)}
             placeholder="Valid Card Number"
             required
           />
@@ -178,6 +185,7 @@ const PaymentForm = () => {
             type="text"
             name="expiry"
             onChange={(event) => handleChange(event)}
+            onBlur={(event) => handleOnBlur(event)}
             placeholder="MM/YY"
             required
           />
@@ -192,6 +200,7 @@ const PaymentForm = () => {
             type="text"
             name="name"
             onChange={(event) => handleChange(event)}
+            onBlur={(event) => handleOnBlur(event)}
             maxLength={50}
             placeholder="Your Name"
             required
@@ -207,6 +216,7 @@ const PaymentForm = () => {
             type="email"
             name="email"
             onChange={(event) => handleChange(event)}
+            onBlur={(event) => handleOnBlur(event)}
             placeholder="Your Email"
           />
         </div>
@@ -220,7 +230,6 @@ const PaymentForm = () => {
             <button
               type="button"
               className="blackBg-whiteFg-btn"
-              onClick={handleOnSubmit}
               ref={submitBtnRef}
               disabled
             >
